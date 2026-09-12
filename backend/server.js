@@ -39,18 +39,18 @@ app.use('/api/saved', require('./routes/savedRoutes'));
 app.use('/api/compare', require('./routes/compareRoutes'));
 app.use('/api/contact', require('./routes/contactRoutes'));
 
-// Serve Frontend in Production
-if (process.env.NODE_ENV === 'production') {
-  // Set build folder as static files directory
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+// Serve Frontend in Production / when dist exists
+const fs = require('fs');
+const distPath = path.join(__dirname, '../frontend/dist');
 
-  // Route any remaining GET requests to React's index.html
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
   app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
+    res.sendFile(path.resolve(distPath, 'index.html'));
   });
 } else {
   app.get('/', (req, res) => {
-    res.send('API is running...');
+    res.send('PropConnect Backend API is running 🏠 (Frontend dist folder not found)');
   });
 }
 

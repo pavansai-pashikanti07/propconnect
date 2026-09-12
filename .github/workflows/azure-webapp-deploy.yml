@@ -1,0 +1,68 @@
+name: Build and Deploy PropConnect to Azure Web App
+
+on:
+  push:
+    branches: [ "main", "feature" ]
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    name: 🏗️ Build Frontend & Backend
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend/package-lock.json
+
+    - name: Build React Frontend
+      run: |
+        cd frontend
+        npm install
+        npm run build
+        cd ..
+
+    - name: Install Backend Production Dependencies
+      run: |
+        cd backend
+        npm install --omit=dev
+        cd ..
+
+    - name: Prepare Deployment Artifact Bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: propconnect-bundle
+        path: |
+          backend/
+          frontend/dist/
+          package.json
+          server.js
+
+  deploy:
+    name: 🚀 Deploy to Azure Web App
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download Deployment Bundle
+      uses: actions/download-artifact@v4
+      with:
+        name: propconnect-bundle
+
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'first-web-app'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: .
