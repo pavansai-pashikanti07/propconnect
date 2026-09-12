@@ -27,6 +27,8 @@ jobs:
           backend/package-lock.json
 
     - name: Build React Frontend
+      env:
+        VITE_API_URL: https://propconnect-xxh6.onrender.com/api
       run: |
         cd frontend
         npm install
